@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { SchedulerService } from './scheduler/scheduler.service';
 
 @Injectable()
 export class AppService {
-  proxy() {
+  constructor(private schedulerService: SchedulerService) {}
+
+  async proxy(request: Request, userId: string) {
+    // 큐에 요청 추가
+    this.schedulerService.addRequest(request, userId);
+
     //API 호출
     return true;
   }

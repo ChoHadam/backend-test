@@ -1,5 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req, ValidationPipe } from '@nestjs/common';
 import { AppService } from './app.service';
+import { RequestHeaderDTO } from './dto/request-header.dto';
+import { RequestHeaders } from './request-headers.decorator';
 
 @Controller()
 export class AppController {
@@ -7,8 +9,12 @@ export class AppController {
 
   //프록시 처리
   @Get()
-  proxy() {
-    return this.appService.proxy();
+  async proxy(
+    @Req() request: Request,
+    @RequestHeaders(new ValidationPipe({ validateCustomDecorators: true }))
+    headers: RequestHeaderDTO,
+  ) {
+    return await this.appService.proxy(request, headers.id);
   }
 
   @Get('challenge1')
