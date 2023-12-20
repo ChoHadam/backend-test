@@ -43,9 +43,9 @@ export class AppService {
     });
 
     // 상수 시간 내에 category name을 검색하기 위해 해시맵으로 관리
-    const categoryMap: { [key: string]: Category } = {};
+    const categoryMap = new Map<string, Category>();
     for (const category of categoryList) {
-      categoryMap[category.name] = category;
+      categoryMap.set(category.name, category);
     }
 
     const start = Date.now();
@@ -56,7 +56,7 @@ export class AppService {
       keyword: '가구',
     };
 
-    product.category = categoryMap[product.keyword as string];
+    product.category = categoryMap.get(product.keyword as string);
     delete product.keyword;
 
     const end = Date.now();
@@ -79,9 +79,9 @@ export class AppService {
     });
 
     // 상수 시간 내에 src를 검색하기 위해 해시맵으로 관리
-    const translateWordMap: { [key: string]: string } = {};
+    const translateWordMap = new Map<string, string>();
     for (const word of translateWordList) {
-      translateWordMap[word.src] = word.dest;
+      translateWordMap.set(word.src, word.dest);
     }
 
     const optionList = [
@@ -99,12 +99,13 @@ export class AppService {
     const start = Date.now();
 
     // 원소 수가 월등히 많은 translateWordList에 대한 반복문을 피하기 위해 정규식 생성
-    const regex = new RegExp(Object.keys(translateWordMap).join('|'), 'g');
+    const regexPattern = Array.from(translateWordMap.keys()).join('|');
+    const regex = new RegExp(regexPattern, 'g');
 
     optionList.map((option) => {
       option.name = option.name.replace(
         regex,
-        (matched) => translateWordMap[matched],
+        (matched) => translateWordMap.get(matched) as string,
       );
     });
 
