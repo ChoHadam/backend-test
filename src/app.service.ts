@@ -1,8 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { SchedulerService } from './scheduler/scheduler.service';
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  keyword?: string;
+  category?: Category;
+}
 
 @Injectable()
 export class AppService {
-  proxy() {
+  constructor(private schedulerService: SchedulerService) {}
+
+  async proxy(request: Request, userId: string) {
+    // 큐에 요청 추가
+    this.schedulerService.addRequest(request, userId);
+
     //API 호출
     return true;
   }
@@ -15,7 +33,7 @@ export class AppService {
    */
   challenge1(): number {
     //함수 실행 시간 반환
-    const categoryList = [
+    const categoryList: Category[] = [
       { id: 1, name: '가구' },
       { id: 2, name: '공구' },
       { id: 3, name: '의류' },
@@ -24,13 +42,22 @@ export class AppService {
       categoryList.push({ id: index + 4, name: `카테고리${index + 4}` });
     });
 
+    // 상수 시간 내에 category name을 검색하기 위해 해시맵으로 관리
+    const categoryMap = new Map<string, Category>();
+    for (const category of categoryList) {
+      categoryMap.set(category.name, category);
+    }
+
     const start = Date.now();
 
-    const product = {
+    const product: Product = {
       id: 1,
       name: '의자',
       keyword: '가구',
     };
+
+    product.category = categoryMap.get(product.keyword as string);
+    delete product.keyword;
 
     const end = Date.now();
     return end - start;
@@ -51,6 +78,12 @@ export class AppService {
       translateWordList.push({ src: index.toString(), dest: `A` });
     });
 
+    // 상수 시간 내에 src를 검색하기 위해 해시맵으로 관리
+    const translateWordMap = new Map<string, string>();
+    for (const word of translateWordList) {
+      translateWordMap.set(word.src, word.dest);
+    }
+
     const optionList = [
       { id: 1, name: '블랙 XL' },
       { id: 2, name: '블랙 L' },
@@ -64,6 +97,17 @@ export class AppService {
     });
 
     const start = Date.now();
+
+    // 원소 수가 월등히 많은 translateWordList에 대한 반복문을 피하기 위해 정규식 생성
+    const regexPattern = Array.from(translateWordMap.keys()).join('|');
+    const regex = new RegExp(regexPattern, 'g');
+
+    optionList.map((option) => {
+      option.name = option.name.replace(
+        regex,
+        (matched) => translateWordMap.get(matched) as string,
+      );
+    });
 
     const end = Date.now();
     return end - start;
