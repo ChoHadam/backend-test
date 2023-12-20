@@ -78,6 +78,12 @@ export class AppService {
       translateWordList.push({ src: index.toString(), dest: `A` });
     });
 
+    // 상수 시간 내에 src를 검색하기 위해 해시맵으로 관리
+    const translateWordMap: { [key: string]: string } = {};
+    for (const word of translateWordList) {
+      translateWordMap[word.src] = word.dest;
+    }
+
     const optionList = [
       { id: 1, name: '블랙 XL' },
       { id: 2, name: '블랙 L' },
@@ -91,6 +97,16 @@ export class AppService {
     });
 
     const start = Date.now();
+
+    // 원소 수가 월등히 많은 translateWordList에 대한 반복문을 피하기 위해 정규식 생성
+    const regex = new RegExp(Object.keys(translateWordMap).join('|'), 'g');
+
+    optionList.map((option) => {
+      option.name = option.name.replace(
+        regex,
+        (matched) => translateWordMap[matched],
+      );
+    });
 
     const end = Date.now();
     return end - start;
